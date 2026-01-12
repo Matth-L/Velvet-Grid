@@ -3,6 +3,32 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
+
   - job_name: node-compute
     static_configs:
       - targets: ["c1:9100", "c2:9100", "c3:9100"]
+
+  - job_name: 'slurm_jobs'
+    static_configs:
+      - targets: ['slurmctld:6817']
+    metrics_path: '/metrics/jobs'
+
+  - job_name: 'slurm_nodes'
+    static_configs:
+      - targets: ['slurmctld:6817']
+    metrics_path: '/metrics/nodes'
+
+  - job_name: 'slurm_partitions'
+    static_configs:
+      - targets: ['slurmctld:6817']
+    metrics_path: '/metrics/partitions'
+
+  - job_name: 'slurm_scheduler'
+    static_configs:
+      - targets: ['slurmctld:6817']
+    metrics_path: '/metrics/scheduler'
+
+  - job_name: 'slurm_useracct'
+    static_configs:
+      - targets: ['slurmctld:6817']
+    metrics_path: '/metrics/jobs-users-accts'

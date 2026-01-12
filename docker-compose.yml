@@ -59,10 +59,8 @@ services:
     networks:
       - slurm-network
 
-  # The login node, where the job can be run for the slurm cluster
-  # Also the remote part of llview, the remote part gather metrics from slurm
   slurmctld:
-    image: remote
+    image: slurm-docker-cluster
     command: slurmctld
     container_name: slurmctld
     hostname: slurmctld

@@ -59,7 +59,7 @@ COPY --from=tianon/gosu /gosu /usr/local/bin/
 FROM core AS tools
 
 ARG PDSG_TAG=2.35
-ARG PMIX_TAG=4.2.7
+ARG PMIX_TAG=5.0.9
 ARG OPENMPI_VERSION=5.0.8
 
 RUN set -x \
@@ -101,7 +101,8 @@ RUN set -x \
 
 FROM tools AS slurm
 
-ARG SLURM_TAG=slurm-25-05-1-1
+ARG SLURM_TAG=slurm-25-11-1-1
+
 RUN set -x \
     && git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
     && pushd slurm \
@@ -142,28 +143,8 @@ RUN set -x \
 ###################################################
 ###################################################
 ###################################################
-# Stage 4 (conf):  Copy slurm conf
 ###################################################
-###################################################
-###################################################
-
-FROM slurm AS conf
-
-COPY ./slurm/slurm.conf /etc/slurm/slurm.conf
-
-COPY ./slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
-
-COPY ./slurm/cgroup.conf /etc/slurm/cgroup.conf
-
-RUN set -x \
-    && chown slurm:slurm /etc/slurm/slurmdbd.conf \
-    && chmod 600 /etc/slurm/slurmdbd.conf \
-    && chmod 644 /etc/slurm/slurm.conf
-
-###################################################
-###################################################
-###################################################
-# Stage 5 (prometheus): Node exporter,
+# Stage 4 (prometheus): Node exporter,
 # /!\ default port is used :  9100
 # https://prometheus.io/docs/guides/node-exporter/
 ###################################################
@@ -171,9 +152,9 @@ RUN set -x \
 ###################################################
 
 
-FROM conf AS prometheus_node_exporter
+FROM slurm AS prometheus_node_exporter
 
-ARG PROMETHEUS_VERSION=1.9.1
+ARG PROMETHEUS_VERSION=1.10.2
 ARG OS=linux
 ARG ARCH=amd64
 RUN set -x \
@@ -182,17 +163,23 @@ RUN set -x \
 
 ###################################################
 ###################################################
-###################################################
-# Stage 6: Additionnal package for test
+# Stage 5 (conf):  Copy slurm conf
 ###################################################
 ###################################################
 ###################################################
 
-FROM prometheus_node_exporter AS stress
+FROM prometheus_node_exporter AS conf
 
-RUN dnf -y install epel-release && \
-    dnf -y install stress && \
-    dnf clean all
+COPY ./slurm/slurm.conf /etc/slurm/slurm.conf
+
+COPY ./slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
+
+COPY ./slurm/cgroup.conf /etc/slurm/cgroup.conf
+
+RUN set -x \
+&& chown slurm:slurm /etc/slurm/slurmdbd.conf \
+&& chmod 600 /etc/slurm/slurmdbd.conf \
+&& chmod 644 /etc/slurm/slurm.conf
 
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
