@@ -1,4 +1,4 @@
-# metric-gathering-docker-cluster
+# Velvet Grid
 
 ## Build
 
