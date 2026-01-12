@@ -1,0 +1,127 @@
+# COMPUTE NODE TEMPLATE
+x-compute-node: &compute
+  image : slurm-docker-cluster
+  command: slurmd
+  mem_limit: 1g
+  privileged: true
+  volumes:
+    - etc_munge:/etc/munge
+    - var_log_slurm:/var/log/slurm
+    - /run/dbus/system_bus_socket:/host/run/dbus/system_bus_socket # fix dbus
+  expose:
+    - "6818"
+  depends_on:
+    - "slurmctld"
+  networks:
+    - slurm-network
+  environment: # fix dbus
+    - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+
+################################################################################
+################################################################################
+### SERVICES
+################################################################################
+################################################################################
+
+services:
+  mysql:
+    image: mariadb
+    hostname: mysql
+    container_name: mysql
+    privileged: true
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: slurm_acct_db
+      MYSQL_USER: slurm
+      MYSQL_PASSWORD: password
+    volumes:
+      - var_lib_mysql:/var/lib/mysql
+    networks:
+      - slurm-network
+
+  # Contains the slurm database
+  slurmdbd:
+    image: slurm-docker-cluster
+    command: slurmdbd
+    build:
+      context: .
+    container_name: slurmdbd
+    hostname: slurmdbd
+    privileged: true
+    volumes:
+      - etc_munge:/etc/munge
+      - var_log_slurm:/var/log/slurm
+      - var_spool_slurm:/var/spool/slurmctld
+    expose:
+      - "6819"
+    depends_on:
+      - mysql
+    networks:
+      - slurm-network
+
+  # The login node, where the job can be run for the slurm cluster
+  # Also the remote part of llview, the remote part gather metrics from slurm
+  slurmctld:
+    image: remote
+    command: slurmctld
+    container_name: slurmctld
+    hostname: slurmctld
+    privileged: true
+    volumes:
+      - etc_munge:/etc/munge
+      - var_log_slurm:/var/log/slurm
+    expose:
+      - "6817"
+    depends_on:
+      - "slurmdbd"
+    networks:
+      - slurm-network
+
+
+  prometheus:
+    image: prom/prometheus
+    hostname : prometheus
+    container_name: prometheus
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - 9090:9090
+    networks:
+      - slurm-network
+
+
+  ############################################################################
+  ############################################################################
+  ##### COMPUTE NODE
+  ##### c1 & c2 & c3 are the compute node, nothings happens there
+  ##### except running the jobs set using the /scripts/launch_job.sh
+  ############################################################################
+  ############################################################################
+  c1:
+    << : *compute
+    hostname: c1
+    container_name: c1
+    cpuset : "1"
+
+  c2:
+    << : *compute
+    hostname: c2
+    container_name: c2
+    cpuset : "2"
+
+  c3:
+    << : *compute
+    hostname: c3
+    container_name: c3
+    cpuset : "3"
+
+volumes:
+  etc_munge:
+  slurm_jobdir:
+  var_lib_mysql:
+  var_log_slurm:
+  var_run_slurm:
+  var_spool_slurm:
+networks:
+  slurm-network:
+    driver: bridge
