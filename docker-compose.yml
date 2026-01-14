@@ -1,3 +1,7 @@
+# This file is part of Velvet-Grid
+#
+# Made by : Matthias Lapu (CEA)
+
 # COMPUTE NODE TEMPLATE
 x-compute-node: &compute
   image : slurm-docker-cluster

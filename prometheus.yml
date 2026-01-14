@@ -1,4 +1,9 @@
+# This file is part of Velvet-Grid
+#
+# Made by : Matthias Lapu (CEA)
+#
 # This file is used for the configuration of the Prometheus Server,
+
 global:
   scrape_interval: 15s
 

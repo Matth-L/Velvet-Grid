@@ -1,8 +1,13 @@
 #!/bin/bash
+
+# This file is part of Velvet-Grid
+#
+# Made by : Matthias Lapu (CEA)
+
+# What does it do ?
 # Launches prometheus on each compute node,
 # the path is not generic and is related to the ./Dockerfile that is the *
 # `slurm-docker-cluster` img
-# Author : Matthias LAPU (CEA)
 
 set -euo pipefail
 

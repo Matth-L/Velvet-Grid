@@ -1,3 +1,3 @@
-[submodule "Velvet-Rooster"]
-	path = Velvet-Rooster
+[submodule "velvet-rooster"]
+	path = velvet-rooster
 	url = https://github.com/Matth-L/Velvet-Rooster.git
