@@ -31,6 +31,32 @@ Source :
 https://www.ateam-oracle.com/howto-exporting-prometheus-data-to-kafka
 
 
-# In kafka :
+# In kafka to check if we get all teh data from prometheus:
 
+```sh
+docker exec -it broker bash
 /opt/kafka/bin/kafka-console-consumer.sh --topic metrics --from-beginning --bootstrap-server broker:29092
+```
+
+# opensearch data prepper
+
+https://docs.opensearch.org/latest/data-prepper/pipelines/configuration/sources/kafka/
+
+
+# Opensearch
+
+```sh
+docker exec -it opensearch-node1 bash
+sh plugins/opensearch-security/tools/install_demo_configuration.sh -y
+```
+
+Something should appear now, if not, wait a bit :
+
+```sh
+curl -k -XGET -u admin:SecureP@ssword1 https://localhost:9200
+```
+
+opensearch is available here :
+
+
+https://localhost:9200

@@ -111,7 +111,8 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -119,11 +120,57 @@ services:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
-      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+
+  opensearch-node1:
+    image: opensearchproject/opensearch:3
+    container_name: opensearch-node1
+    hostname: opensearch-node1
+    environment:
+      discovery.type: single-node
+      node.name: opensearch-node1
+      bootstrap.memory_lock: true
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: SecureP@ssword1
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+      - 9600:9600
+    networks:
+      - slurm-network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3
+    container_name: opensearch-dashboards
+    hostname: opensearch-dashboards
+    volumes:
+      - ./opensearch_dashboards.yaml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+    ports:
+      - 5601:5601
+    networks:
+      - slurm-network
+    depends_on:
+      - opensearch-node1
+
+
+  opensearch-dataprepper:
+    image: opensearchproject/data-prepper:latest
+    container_name: opensearch-dataprepper
+    hostname: opensearch-dataprepper
+    depends_on:
+      - opensearch-node1
+      - broker
+    networks:
+      - slurm-network
+    volumes:
+      - ./dataprepper/pipelines:/usr/share/data-prepper/pipelines:ro
+      - ./dataprepper/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml:ro
+    ports:
+      - 4900:4900
 
   ############################################################################
   ############################################################################
@@ -157,6 +204,7 @@ volumes:
   var_log_slurm:
   var_run_slurm:
   var_spool_slurm:
+  opensearch-data:
 networks:
   slurm-network:
     driver: bridge
