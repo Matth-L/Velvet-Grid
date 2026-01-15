@@ -37,3 +37,6 @@ scrape_configs:
     static_configs:
       - targets: ['slurmctld:6817']
     metrics_path: '/metrics/jobs-users-accts'
+
+remote_write:
+  - url: "http://prometheus-kafka-adapter:8080/receive"
