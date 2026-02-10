@@ -106,11 +106,10 @@ RUN set -x \
 
 FROM tools AS slurm
 
-ARG SLURM_TAG=slurm-25-11-1-1
+COPY ./slurm_build /slurm_build
 
 RUN set -x \
-    && git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
-    && pushd slurm \
+    && cd slurm_build \
     && ./configure --enable-debug \
     --prefix=/usr \
     --sysconfdir=/etc/slurm \
@@ -122,8 +121,6 @@ RUN set -x \
     && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
     && install -D -m644 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
     && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
-    && popd \
-    && rm -rf slurm \
     && groupadd -r --gid=990 slurm \
     && useradd -r -g slurm --uid=990 slurm \
     && mkdir /etc/sysconfig/slurm \
@@ -157,14 +154,39 @@ RUN set -x \
 ###################################################
 
 
-FROM slurm AS prometheus_node_exporter
+# FROM slurm AS node_exporter
 
-ARG PROMETHEUS_VERSION=1.10.2
-ARG OS=linux
-ARG ARCH=amd64
+# ARG PROMETHEUS_VERSION=1.10.2
+# ARG OS=linux
+# ARG ARCH=amd64
+# RUN set -x \
+#     && wget https://github.com/prometheus/node_exporter/releases/download/v${PROMETHEUS_VERSION}/node_exporter-${PROMETHEUS_VERSION}.${OS}-${ARCH}.tar.gz \
+#     && tar xvfz node_exporter-${PROMETHEUS_VERSION}.${OS}-${ARCH}.tar.gz
+#
+
+
+
+###################################################
+###################################################
+###################################################
+###################################################
+# Stage 4 ?  (prometheus): cgroup exporter,
+# /!\ default port is used :  9306
+###################################################
+###################################################
+###################################################
+
+FROM slurm AS node_exporter
+
+RUN dnf -y install \
+    golang
+
+
 RUN set -x \
-    && wget https://github.com/prometheus/node_exporter/releases/download/v${PROMETHEUS_VERSION}/node_exporter-${PROMETHEUS_VERSION}.${OS}-${ARCH}.tar.gz \
-    && tar xvfz node_exporter-${PROMETHEUS_VERSION}.${OS}-${ARCH}.tar.gz
+    && wget https://github.com/arianvp/cgroup-exporter/archive/refs/tags/v0.1.0.tar.gz\
+    && tar xvfz v0.1.0.tar.gz \
+    && cd cgroup-exporter-0.1.0 \
+    && go build -v -x .
 
 ###################################################
 ###################################################
@@ -173,19 +195,16 @@ RUN set -x \
 ###################################################
 ###################################################
 
-FROM prometheus_node_exporter AS conf
+FROM node_exporter AS conf
 
 COPY ./slurm/slurm.conf /etc/slurm/slurm.conf
-
 COPY ./slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
-
 COPY ./slurm/cgroup.conf /etc/slurm/cgroup.conf
 
 RUN set -x \
-&& chown slurm:slurm /etc/slurm/slurmdbd.conf \
-&& chmod 600 /etc/slurm/slurmdbd.conf \
-&& chmod 644 /etc/slurm/slurm.conf
-
+    && chown slurm:slurm /etc/slurm/slurmdbd.conf \
+    && chmod 600 /etc/slurm/slurmdbd.conf \
+    && chmod 644 /etc/slurm/slurm.conf
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 

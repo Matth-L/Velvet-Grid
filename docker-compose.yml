@@ -4,7 +4,7 @@
 
 # COMPUTE NODE TEMPLATE
 x-compute-node: &compute
-  image : slurm-docker-cluster
+  image: slurm-docker-cluster
   command: slurmd
   mem_limit: 1g
   privileged: true
@@ -79,10 +79,9 @@ services:
     networks:
       - slurm-network
 
-
   prometheus:
     image: prom/prometheus
-    hostname : prometheus
+    hostname: prometheus
     container_name: prometheus
     volumes:
       - "./prometheus.yml:/etc/prometheus/prometheus.yml"
@@ -91,6 +90,7 @@ services:
     networks:
       - slurm-network
 
+  # https://github.com/Telefonica/prometheus-kafka-adapter
   prometheus-kafka-adapter:
     image: telefonica/prometheus-kafka-adapter:1.9.1
     hostname: prometheus-kafka-adapter
@@ -111,8 +111,8 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093 # the broker listens to everything that uses his port
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092 # it's available to others with this link
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -143,34 +143,63 @@ services:
     networks:
       - slurm-network
 
-  opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:3
-    container_name: opensearch-dashboards
-    hostname: opensearch-dashboards
+  # opensearch-dashboards:
+  #   image: opensearchproject/opensearch-dashboards:3
+  #   container_name: opensearch-dashboards
+  #   hostname: opensearch-dashboards
+  #   volumes:
+  #     - ./opensearch_dashboards.yaml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+  #   ports:
+  #     - 5601:5601
+  #   networks:
+  #     - slurm-network
+  #   depends_on:
+  #     - opensearch-node1
+
+  # grafana:
+  #   image: grafana/grafana-enterprise
+  #   container_name: grafana
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana-storage:/var/lib/grafana
+  #   networks:
+  #     - slurm-network
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER=admin
+  #     - GF_SECURITY_ADMIN_PASSWORD=SecureGrafanaPassword1
+
+  logstash:
+    image: logstash-with-opensearch-plugins:latest
+    container_name: logstash
+    hostname: logstash
     volumes:
-      - ./opensearch_dashboards.yaml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
-    ports:
-      - 5601:5601
-    networks:
-      - slurm-network
+      - ./logstash/config/logstash.yaml:/usr/share/logstash/config/logstash.yaml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
-      - opensearch-node1
-
-
-  opensearch-dataprepper:
-    image: opensearchproject/data-prepper:latest
-    container_name: opensearch-dataprepper
-    hostname: opensearch-dataprepper
-    depends_on:
-      - opensearch-node1
       - broker
     networks:
       - slurm-network
-    volumes:
-      - ./dataprepper/pipelines:/usr/share/data-prepper/pipelines:ro
-      - ./dataprepper/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml:ro
-    ports:
-      - 4900:4900
+    environment:
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+      XPACK_MONITORING_ENABLED: "false"
+
+  # logstash equivalent, not used anymore, just here to test dataprepper
+  # opensearch-dataprepper:
+  #   image: opensearchproject/data-prepper:latest
+  #   container_name: opensearch-dataprepper
+  #   hostname: opensearch-dataprepper
+  #   depends_on:
+  #     - opensearch-node1
+  #     - broker
+  #   networks:
+  #     - slurm-network
+  #   volumes:
+  #     - ./dataprepper/pipelines:/usr/share/data-prepper/pipelines:ro
+  #     - ./dataprepper/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml:ro
+  #   ports:
+  #     - 4900:4900
 
   ############################################################################
   ############################################################################
@@ -180,22 +209,22 @@ services:
   ############################################################################
   ############################################################################
   c1:
-    << : *compute
+    <<: *compute
     hostname: c1
     container_name: c1
-    cpuset : "1"
+    cpuset: "1"
 
   c2:
-    << : *compute
+    <<: *compute
     hostname: c2
     container_name: c2
-    cpuset : "2"
+    cpuset: "2"
 
   c3:
-    << : *compute
+    <<: *compute
     hostname: c3
     container_name: c3
-    cpuset : "3"
+    cpuset: "3"
 
 volumes:
   etc_munge:
@@ -205,6 +234,7 @@ volumes:
   var_run_slurm:
   var_spool_slurm:
   opensearch-data:
+  grafana-storage:
 networks:
   slurm-network:
     driver: bridge

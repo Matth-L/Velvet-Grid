@@ -1,8 +1,8 @@
-#/bin/bash 
+#/bin/bash
 
-docker volume rm velvet-grid_opensearch-data
 docker compose down
+docker volume rm velvet-grid_opensearch-data
+docker volume rm velvet-grid_grafana-storage
 docker compose up -d
-./launch_prometheus_node_exporter.sh
-
-docker exec opensearch-node1 plugins/opensearch-security/tools/install_demo_configuration.sh -y &
+# ./script/prometheus_node_exporter.sh
+ ./script/cgroup_node_exporter.sh
