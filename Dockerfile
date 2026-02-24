@@ -165,7 +165,6 @@ RUN set -x \
 #
 
 
-
 ###################################################
 ###################################################
 ###################################################
@@ -176,17 +175,39 @@ RUN set -x \
 ###################################################
 ###################################################
 
-FROM slurm AS node_exporter
+# FROM slurm AS node_exporter
 
-RUN dnf -y install \
-    golang
+# RUN dnf -y install \
+#     golang
+
+
+# RUN set -x \
+#     && wget https://github.com/arianvp/cgroup-exporter/archive/refs/tags/v0.1.0.tar.gz\
+#     && tar xvfz v0.1.0.tar.gz \
+#     && cd cgroup-exporter-0.1.0 \
+#     && go build -v -x .
+
+
+###################################################
+###################################################
+###################################################
+###################################################
+# Stage 4 ?  PCP,
+###################################################
+###################################################
+###################################################
+
+FROM slurm AS node_exporter
 
 
 RUN set -x \
-    && wget https://github.com/arianvp/cgroup-exporter/archive/refs/tags/v0.1.0.tar.gz\
-    && tar xvfz v0.1.0.tar.gz \
-    && cd cgroup-exporter-0.1.0 \
-    && go build -v -x .
+    && dnf install -y pcp-zeroconf \
+    && dnf clean all
+
+RUN set -x \
+    && mkdir -p /run/pcp /var/log/pcp/pmproxy /var/lib/pcp/config/pmproxy\
+    && chmod 775 /run/pcp /var/log/pcp/ /var/lib/pcp\
+    && chown -R root:root /run/pcp /var/log/pcp /var/lib/pcp
 
 ###################################################
 ###################################################
