@@ -1,3 +1,7 @@
+# Cloning the repo
+```sh
+git clone --recurse-submodules https://github.com/Matth-L/Velvet-Grid.git
+```
 
 # Shared partition
 
