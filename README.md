@@ -70,7 +70,7 @@ squeue
 
 Multiple services are neede for this pipeline :
 
-- `compute_node
+- `compute_node`
 - `prometheus`, a server, to pull metrics, port used, `9090`
 - `prometheus-kafka-adapter`, to transfer data from prometheus to kafka
 - `broker`, the kafka broker, port used `9092`
