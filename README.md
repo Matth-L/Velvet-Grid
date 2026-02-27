@@ -1,3 +1,8 @@
+
+# Shared partition
+
+![Shared node dashboard](./img/shared_node.png "Dashboard of shared partition").
+
 # Quickstart 
 
 ## Build
