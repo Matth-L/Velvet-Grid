@@ -7,13 +7,13 @@
 
 set -euo pipefail
 
-NODELIST=("c1" "c2")
+NODELIST=("c3")
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
 for compute_node in "${NODELIST[@]}"; do
-    log "Launching cgroup node_exporter for $compute_node"
-    docker exec $compute_node bash -c "./cgroup-exporter/cgroup-exporter &"
+    log "Launching lustre exporter for $compute_node"
+    docker exec $compute_node bash -c "./lustre_exporter/lustre_exporter &"
 done

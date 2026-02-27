@@ -1,29 +1,9 @@
-Métrique cgruop : 
+> **Reminder:** cgroup metrics are located at
+> `/sys/fs/cgroup/system.slice/slurmstepd.scope/job_<job_id>/step_<step_id>`
+>
+> where `<job_id>` corresponds to the Slurm job ID (for example: `job_1`) and `<step_id>` to the job step (for example: `step_0`).
 
-```
-cgroup.controllers	cgroup.stat		cpu.stat	       cpuset.cpus.exclusive.effective	memory.high	  memory.reclaim       memory.zswap.current
-cgroup.events		cgroup.subtree_control	cpu.stat.local	       cpuset.cpus.partition		memory.low	  memory.stat	       memory.zswap.max
-cgroup.freeze		cgroup.threads		cpu.weight	       cpuset.mems			memory.max	  memory.swap.current  memory.zswap.writeback
-cgroup.kill		cgroup.type		cpu.weight.nice        cpuset.mems.effective		memory.min	  memory.swap.events   task_0
-cgroup.max.depth	cpu.idle		cpuset.cpus	       memory.current			memory.numa_stat  memory.swap.high     task_special
-cgroup.max.descendants	cpu.max			cpuset.cpus.effective  memory.events			memory.oom.group  memory.swap.max
-cgroup.procs		cpu.max.burst		cpuset.cpus.exclusive  memory.events.local		memory.peak	  memory.swap.peak
-```
-
-
-
-[root@c3 job_1]# perf stat -a -e \
-cycles,instructions,\
-cache-references,cache-misses,\
-branches,branch-misses,\
-bus-cycles,ref-cycles,\
-page-faults,context-switches \
--G system.slice/slurmstepd.scope/job_1 sleep 10
-
-
----
-
-METRIQUE DONNÉE AVEC CGROUP-EXPORTERV2
+# cgroup exporter V2 All metrics
 
 ```
 cgroup_cpu_burst_seconds_total
@@ -157,4 +137,36 @@ cgroup_memory_zswpout
 	Number of pages moved out of memory to zswap.
 cgroup_memory_zswpwb
 	Number of pages written from zswap to swap.
+```
+
+# CPU comparison
+
+## PMPROXY cgroup CPU :
+```
+cgroup_cpu_stat_usage
+cgroup_cpu_stat_user
+cgroup_cpu_stat_system
+cgroup_cpu_stat_kernel
+```
+
+## cgroup v2 :
+```
+cgroup_cpu_burst_seconds_total
+cgroup_cpu_bursts_total
+cgroup_cpu_core_sched_force_idle_seconds_total
+cgroup_cpu_periods_total
+cgroup_cpu_system_seconds_total
+cgroup_throttled_total
+cgroup_throttled_seconds_total
+cgroup_cpu_usage_seconds_total
+cgroup_cpu_user_seconds_total
+```
+
+## standard cgroup exporter :
+```
+cgroup_cpu_system_seconds{cgroup="/user.slice/user-20821.slice"} 1.96
+cgroup_cpu_total_seconds{cgroup="/user.slice/user-20821.slice"} 3.817500568
+cgroup_cpu_user_seconds{cgroup="/user.slice/user-20821.slice"} 1.61
+cgroup_cpus{cgroup="/user.slice/user-20821.slice"} 0
+cgroup_cpu_info{cgroup="/user.slice/user-20821.slice",cpus=""} 1
 ```

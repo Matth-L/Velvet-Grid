@@ -197,17 +197,17 @@ RUN set -x \
 ###################################################
 ###################################################
 
-FROM slurm AS node_exporter
+# FROM slurm AS node_exporter
 
 
-RUN set -x \
-    && dnf install -y pcp-zeroconf \
-    && dnf clean all
+# RUN set -x \
+#     && dnf install -y pcp-zeroconf \
+#     && dnf clean all
 
-RUN set -x \
-    && mkdir -p /run/pcp /var/log/pcp/pmproxy /var/lib/pcp/config/pmproxy\
-    && chmod 775 /run/pcp /var/log/pcp/ /var/lib/pcp\
-    && chown -R root:root /run/pcp /var/log/pcp /var/lib/pcp
+# RUN set -x \
+#     && mkdir -p /run/pcp /var/log/pcp/pmproxy /var/lib/pcp/config/pmproxy\
+#     && chmod 775 /run/pcp /var/log/pcp/ /var/lib/pcp\
+#     && chown -R root:root /run/pcp /var/log/pcp /var/lib/pcp
 
 ###################################################
 ###################################################
@@ -216,7 +216,7 @@ RUN set -x \
 ###################################################
 ###################################################
 
-FROM node_exporter AS conf
+FROM slurm AS conf
 
 COPY ./slurm/slurm.conf /etc/slurm/slurm.conf
 COPY ./slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf

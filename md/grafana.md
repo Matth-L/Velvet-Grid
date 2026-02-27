@@ -1,3 +1,47 @@
+# Visualisation (Grafana Configuration)
+
+The configuration file is `grafana_datasources.yaml`. And is automatically mounted.
+
+## Index Verification & Grafana Access
+
+1. confirm the OpenSearch index has been created
+
+**Verify Index Name:**
+
+```sh
+curl -k -XGET -u admin:SecureP@ssword1 https://localhost:9200/_cat/indices?v
+```
+
+**Access Grafana:**
+
+Open :
+http://localhost:3000/
+
+| Credential | Value |
+| :--- | :--- |
+| **User** | `admin` |
+| **Password** | `SecureGrafanaPassword1` |
+
+## Manual setup, without the docker mount
+
+Add your first data source :
+- Go to the bottom and click on `Find more data source`.
+- Choose opensearch
+- Install
+
+### OpenSearch Data Source Setup
+
+Configure a new OpenSearch data source in Grafana using the following settings:
+
+| Setting | Value | Configuration Detail |
+| :--- | :--- | :--- |
+| **URL** | `https://opensearch-node1:9200` | Address of the OpenSearch service. |
+| **Auth** | Basic Auth | Use basic authentication. |
+| **Skip TLS Verify** | Checked | Ignore TLS certificate errors  |
+| **User** | `admin` | OpenSearch Security username. |
+| **Password** | `SecureP@ssword1` | OpenSearch Security password. |
+| **Index Name** | `prometheus-metrics` | Target index for LDMS metrics. |
+
 
 # Aggrégation slurm openmetrics
 
@@ -67,3 +111,9 @@ Metric :
 average, value
 Terms. instance.keyword (pour avoir le nom du noeud)
 date histogram @timestamp
+
+
+
+AJOUTER A CHAQUE QUERY LE FILTER BY VALUE :
+
+USERNAME IS EQUAL ${__user.login}

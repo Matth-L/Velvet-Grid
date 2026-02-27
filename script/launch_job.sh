@@ -17,16 +17,16 @@ log "Launching jobs"
 # Launch job for userA
 log "Launching job as usera for project1..."
 docker exec -u "usera:usera" "$CONTAINER" \
-    srun --partition=compute --account=project1 --mpi=pmi2 -N 1 "$SCRIPT_PATH" &
+    srun --partition=shared --account=project1 --mpi=pmi2 -N 1 "$SCRIPT_PATH" &
 
 # Launch job for userB
 log "Launching job as userb for project2..."
 docker exec -u "userb:userb" "$CONTAINER" \
-    srun --partition=compute --account=project2 --mpi=pmi2 -N 1 "$SCRIPT_PATH" &
+    srun --partition=shared --account=project2 --mpi=pmi2 -N 1 "$SCRIPT_PATH" &
 
 # Launch job for userC
 log "Launching job as userc for project3..."
 docker exec -u "userc:userc" "$CONTAINER" \
-    srun --partition=debug --account=project3 --mpi=pmi2 -N 1 "$SCRIPT_PATH" &
+    srun --partition=only --account=project3 --mpi=pmi2 -N 1 "$SCRIPT_PATH" &
 
 log "All jobs launched."

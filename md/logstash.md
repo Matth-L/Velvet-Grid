@@ -1,36 +1,14 @@
-# what the data looks like : 
+# what the data looks like (kind of):
 ```
 event.original:
     {"labels":{"__name__":"slurm_nodes_external","instance":"slurmctld:6817","job":"slurm_nodes"}
 ```
 # Why is the config like this : 
 
-```conf
-  grok {
-    match => {
-        "instance" => "^(?<instance>[^:]+)(?::\d+)?$"
-    }
-    overwrite => ["instance"]
-  }
-```
-removes the port in the event.original. for the instance field and overwrite it.
 
---- 
+## Input
 
 ```conf
-ruby {
-  code => "
-    event.get('labels').each do |key, value|
-      event.set(key, value)
-    end
-  "
-}
-```
-parse the labels field.
-
----
-
-```
 input {
   kafka {
     bootstrap_servers => "broker:29092"
@@ -46,11 +24,20 @@ input {
 }
 ```
 
-Retrieves the data from kafka, there is only one topics, the default one named metrics
+## Filtering
 
----
+Multiple things happen in the filtering process of logstash :
 
-```
+- Flattening the data
+- Regex to remove port
+- Regex to remove cgroup path that are not related to user job
+- Adding a new field to slurm metrics "job_id_slurm", it's redundant but allows for a better join
+- Removing useless field that are redundant
+
+## Output
+
+The index name for the opensearch database is "prometheus-metrics"
+```conf
 output {
   opensearch {
     hosts => ["https://opensearch-node1:9200"]
@@ -61,6 +48,4 @@ output {
     ssl_certificate_verification => false  # it's a demo
   }
 }
-```
 
-We just use the same data provided by the docker compose to store it in openseach. The topics is changed and the index is named prometheus-metrics.

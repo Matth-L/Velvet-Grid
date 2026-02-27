@@ -10,12 +10,12 @@ Launching pcp :
 pcp # it works ! 
 ```
 
-Lister les métriques :
+List metrics :
 ```
 pminfo 
 ```
 
-Lancer le proxy : 
+Launch proxy :
 ```sh
 /usr/libexec/pcp/bin/pmproxy -p 44322 
 ```
@@ -39,11 +39,11 @@ pmlogger doit être envoyé depuis c2 vers le pmproxy de c1
 
 # Test 
 
-```
+```sh
 srun --partition=compute --mpi=pmi2 -N 1 --nodelist=c1  sleep 100000 &
 ```
 
-## Test effectif
+## Test on node
 
 Sur c2 :
 ```sh
@@ -54,6 +54,6 @@ docker exec -it c2 bash
 Sur c1:
 ```sh
 docker exec -it c1 bash 
-pminfo -h c2 # fonctionne
+pminfo -h c2
 /usr/libexec/pcp/bin/pmproxy -A -p 44322 
 ```

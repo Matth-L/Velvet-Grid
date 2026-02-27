@@ -1,10 +1,8 @@
 # This file is part of Velvet-Grid
-#
 # Made by : Matthias Lapu (CEA)
 
 # COMPUTE NODE TEMPLATE
 x-compute-node: &compute
-  image: slurm-docker-cluster
   command: slurmd
   mem_limit: 1g
   privileged: true
@@ -12,8 +10,8 @@ x-compute-node: &compute
     - etc_munge:/etc/munge
     - var_log_slurm:/var/log/slurm
     - /run/dbus/system_bus_socket:/host/run/dbus/system_bus_socket # fix dbus
-    - ./pcp_conf/pmcd.conf:/etc/pcp/pmcd/pmcd.conf
-    - ./pcp_conf/pmproxy.conf:/etc/pcp/pmproxy/pmproxy.conf
+    # - ./pcp_conf/pmcd.conf:/etc/pcp/pmcd/pmcd.conf
+    # - ./pcp_conf/pmproxy.conf:/etc/pcp/pmproxy/pmproxy.conf
     - ./script/sleep.sh:/shared/sleep.sh
   expose:
     - "6818"
@@ -200,18 +198,21 @@ services:
   ############################################################################
   c1:
     <<: *compute
+    image: node_sharing
     hostname: c1
     container_name: c1
     cpuset: "1"
 
   c2:
     <<: *compute
+    image: node_sharing
     hostname: c2
     container_name: c2
     cpuset: "2"
 
   c3:
     <<: *compute
+    image: node_only
     hostname: c3
     container_name: c3
     cpuset: "3"

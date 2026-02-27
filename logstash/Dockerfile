@@ -1,4 +1,4 @@
-FROM logstash:8.19.11
+FROM logstash:9.3.0
 
 RUN bin/logstash-plugin install logstash-output-opensearch
 RUN bin/logstash-plugin install logstash-filter-opensearch

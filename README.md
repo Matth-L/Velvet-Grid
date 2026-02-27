@@ -1,79 +1,94 @@
-# Velvet Grid
+# Quickstart 
 
 ## Build
 
 ```sh
+# Activate PSI to have pressure information 
+sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=1 psi=1"
+````
+
+## Building the container
+
+```sh
 docker build -t slurm-docker-cluster --network=host .
-docker build -t logstash-with-opensearch-plugins --network=host logstash #building logstash
+```
+> slurm is built from source because I added a new metric named "slurm_user_node_active"
+
+> the slurm configuration is in the folder `/slurm`
+
+```sh
+docker build -t node_sharing -f ./docker/node_sharing.Dockerfile --network=host .
+docker build -t node_only -f ./docker/node_only.Dockerfile --network=host .
+docker build -t logstash-with-opensearch-plugins --network=host logstash # building logstash
+```
+
+## Launching the POC
+```sh
 ./launch.sh
-
 docker exec -it slurmctld bash
-srun --partition=compute --mpi=pmi2 -N 2 sleep 100000 &
-```
-## Check prometheus health :
-
-http://localhost:9090/targets
-
-## ip list for the cluster
-
-- c3 : 172.18.0.9
-- c2 : 172.18.0.10
-- prometheus : 172.18.0.3
-- slurmdbd : 172.18.0.6
-- prometheus-kafka-adapter : 172.18.0.2
-- mysql : 172.18.0.5
-- c1 : 172.18.0.8
-- broker : 172.18.0.4
-- slurmctld : 172.18.0.7
-
-
-Source :
-
-https://www.ateam-oracle.com/howto-exporting-prometheus-data-to-kafka
-
-
-# In kafka to check if we get all teh data from prometheus:
-
-```sh
-docker exec -it broker bash
-# list topics
-/opt/kafka/bin/kafka-topics.sh --list --bootstrap-server broker:29092
-# consume topic named "metrics"
-/opt/kafka/bin/kafka-console-consumer.sh --topic metrics --from-beginning --bootstrap-server broker:29092
+sinfo
+squeue
 ```
 
-# opensearch data prepper
-
-https://docs.opensearch.org/latest/data-prepper/pipelines/configuration/sources/kafka/
-
-Why data prepper and not logstash ? to test
-
-https://static.sched.com/hosted_files/opensearchconeu2025/18/Data%20Prepper%20or%20Logstash.pdf
-
-Logstash seems better because there can be an infinite number of topics, which is not the case with dataprepper
-
-# Opensearch
-
-```sh
-docker exec -it opensearch-node1 bash
-sh plugins/opensearch-security/tools/install_demo_configuration.sh -y
+## Pipeline
+```
+[ Compute Node ]
+      |
+      |  Slurm (slurmctld) exposes OpenMetrics
+      |  node_exporter runs on the compute node
+      v
+[ Prometheus ]
+      |
+      |  Metrics are scraped
+      v
+[ Prometheus-Kafka-Adapter ]
+      |
+      |  Metrics are converted to Kafka messages
+      v
+[ Kafka ]
+      |
+      |  Logstash pipeline consumes metrics
+      v
+[ OpenSearch ]
+      |
+      |  Data indexed as time-series documents
+      v
+[ Grafana ]
+      |
+      |  Dashboards and visualizations
+      v
+[ User ]
 ```
 
-Something should appear now, if not, wait a bit :
 
-```sh
-curl -k -XGET -u admin:SecureP@ssword1 https://localhost:9200
-```
+# List of services
 
-opensearch is available here :
+Multiple services are neede for this pipeline :
 
+- `compute_node
+- `prometheus`, a server, to pull metrics, port used, `9090`
+- `prometheus-kafka-adapter`, to transfer data from prometheus to kafka
+- `broker`, the kafka broker, port used `9092`
+- `opensearch-node`, the database used to store the metrics, port used `9200`
+- `logstash`, to stream the data from kafka to opensearch, also apply regex and
+ enrich the data a bit
+- `grafana`, to display the data, the dashboard to import are located in the
+folder [grafana_dahsboards](./grafana_dashboard).
 
-https://localhost:9200
+# To see more details of each service
 
-thedashboard is available here :
+- [opensearch](./md/opensearch.md)
+- [kafka](./md/kafka.md)
+- [logstash](./md/logstash)
+- [grafana](./md/grafana.md)
+- [the query logic for grafana](./md/query.md)
 
-http://localhost:5601
+# Markdown note
 
-# SLURM NEW METRIC ADDED in prometheus:
+- [metrics comparison](./md/metric_comparison.md)
+- [cgroup metric comparison](./md/cgroup_metric_comparison.md)
 
-"slurm_user_node_active"
+# Other tools that I tried but did not use
+
+- `Performance Co-Pilot (PCP)`, it does not give enough cgroup information even though it's similar to node_exporter in terms of metrics. There is still a folder named pcp_conf, it's obsolete, but related to the config, I launched it using `/script/launch_pcp.sh` which is commented and not used it the file `restart.sh`.
+- `Opensearch data prepper`, an alternative to logstash, it might be because I'm used to logstash but it seems like logstash is easier to configure.
