@@ -1,3 +1,6 @@
 [submodule "velvet-rooster"]
 	path = velvet-rooster
 	url = https://github.com/Matth-L/Velvet-Rooster.git
+[submodule "slurm_build"]
+	path = slurm_build
+	url = https://github.com/Matth-L/slurm.git
